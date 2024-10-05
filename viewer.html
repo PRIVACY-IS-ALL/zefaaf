@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message .name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .message .content {
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user1 {
+            align-items: flex-start;
+        }
+
+        .user2 {
+            align-items: flex-end;
+        }
+
+        .user1 .content {
+            background-color: #e6f3ff;
+        }
+
+        .user2 .content {
+            background-color: #fff0f5;
+        }
+
+        .message img {
+            max-width: 100%;
+            max-height: 50px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .message audio {
+            width: 100%;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+<div id="chatContainer" class="chat-container"></div>
+
+<script>
+    const MEDIA_PREFIX_URL = 'https://zefaafapi.com';
+
+    function getJsonFileName() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('chat');
+    }
+
+    async function fetchChatData() {
+        try {
+            const response = await fetch(getJsonFileName());
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching chat data:', error);
+            return {messages: []};
+        }
+    }
+
+    function createMessageContent(msg) {
+        switch (msg.type) {
+            case 0: // Text
+                return `<div class="content">${msg.message}</div>`;
+            case 1: // Image
+                const imgUrl = MEDIA_PREFIX_URL + msg.message;
+                return `<div class="content"><img src="${imgUrl}" alt="Image message" loading="lazy"></div>`;
+            case 3: // Voice
+                const audioUrl = MEDIA_PREFIX_URL + msg.message;
+                return `<audio controls>
+                      <source src="${audioUrl}" type="audio/mp4">
+                    Your browser does not support the audio element.
+                    </audio>`
+            default:
+                return `<div class="content">Unsupported message type</div>`;
+        }
+    }
+
+    function displayChat(data) {
+        const chatContainer = document.getElementById('chatContainer');
+        const users = [...new Set(data.messages.map(msg => msg.name))];
+
+        data.messages.forEach(msg => {
+            const messageDiv = document.createElement('div');
+            const isMale = msg.name === 'رجل';
+            messageDiv.className = `message ${isMale ? 'user1' : 'user2'}`;
+            messageDiv.innerHTML = `
+                    <div class="name">${msg.name}</div>
+                    ${createMessageContent(msg)}
+                `;
+            chatContainer.appendChild(messageDiv);
+        });
+    }
+
+    fetchChatData().then(displayChat);
+</script>
+</body>
+</html>

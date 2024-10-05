@@ -75,7 +75,7 @@
 
     function getJsonFileName() {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('chat');
+        return 'assets/' + urlParams.get('chat');
     }
 
     async function fetchChatData() {
